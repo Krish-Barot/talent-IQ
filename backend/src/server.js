@@ -4,6 +4,9 @@ import { connectDB } from "./lib/db.js";
 import cors from "cors";
 import { serve } from "inngest/express";
 import { inngest, functions } from "./lib/inngest.js";
+import {clerkMiddleware} from "@clerk/express";
+import { protectRoute } from "./middleware/protectRoute.js";
+import chatRoutes from "./routes/chatRoutes.js";
 
 dotenv.config();
 
@@ -12,14 +15,27 @@ const app = express();
 // middleware
 app.use(express.json());
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+app.use(clerkMiddleware()); // This add auth field to request object : req.auth()
 
 // Inngest endpoint
 app.use("/api/inngest", serve({ client: inngest, functions }));
+
+app.use("/api/chat",chatRoutes);
+
+// Default Route
+app.get("/", (req, res) => {
+  res.status(200).json({message: "Backend Running Fine !!"})
+});
 
 // Health check route
 app.get("/health", (req, res) => {
   res.status(200).json({ message: "API is running!" });
 });
+
+// Video-Calls Route
+app.get("/video-calls", protectRoute, (req, res) => {
+  res.status(200).json({message: "Video - Call Endpoint."})
+})
 
 // Start server only when running locally (not on Vercel)
 const startServer = async () => {
