@@ -1,19 +1,18 @@
-import { SignedOut, SignedIn, SignInButton, SignOutButton, UserButton } from '@clerk/clerk-react'
-import './App.css'
+import { Toaster } from 'react-hot-toast'
+import { Routes } from 'react-router'
 
 function App() {
 
   return (
     <>
-      <h1>Welcom To The App</h1>
-      <SignedOut>
-        <SignInButton mode='modal' />
-      </SignedOut>
-      <SignedIn>
-        <SignOutButton />
-      </SignedIn>
-      <UserButton />
+      <Routes>
+        <h1>Welcom To The App</h1>
+
+      </Routes>
+
+      <Toaster />
     </>
+
   )
 }
 
