@@ -1,5 +1,4 @@
 import express from "express";
-import path from "path";
 import cors from "cors";
 import { serve } from "inngest/express";
 import { clerkMiddleware } from "@clerk/express";
@@ -9,13 +8,12 @@ import { connectDB } from "./lib/db.js";
 import { inngest, functions } from "./lib/inngest.js";
 
 import chatRoutes from "./routes/chatRoutes.js";
-import sessionRoutes from "./routes/sessionRoute.js";
+import sessionRoutes from "./routes/sessionRoutes.js";
 
 dotenv.config();
 
 const app = express();
 
-const __dirname = path.resolve();
 
 // middleware
 app.use(express.json());
