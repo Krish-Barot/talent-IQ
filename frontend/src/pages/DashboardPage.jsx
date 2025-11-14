@@ -40,6 +40,7 @@ function DashboardPage() {
       setShowCreatModal(false);
       navigate(`/sessions/${data.session._id}`);
     } catch (error) {
+      console.log(error.message);
     }
   };
 

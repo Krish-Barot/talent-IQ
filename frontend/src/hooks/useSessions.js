@@ -10,7 +10,7 @@ export const useCreateSession = () => {
         mutationKey: ["createSession"],
         mutationFn: sessionApi.createSession,
         retry: 0,
-        onSuccess: (data) => {
+        onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["activeSessions"] });
             queryClient.invalidateQueries({ queryKey: ["myRecentSessions"] });
             toast.success("Session created Successfully !");
