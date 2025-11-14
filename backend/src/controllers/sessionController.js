@@ -24,24 +24,29 @@ export async function createSession(req, res) {
       callId
     });
 
-    const channel = chatClient.channel("messaging", callId, {
-      name: `${problem} Session`,
-      created_by_id: clerkId,
-      members: [clerkId],
-    });
-
-    await channel.create();
+    // Create Stream channel (wrap in try-catch to not fail session creation if Stream fails)
+    try {
+      const channel = chatClient.channel("messaging", callId, {
+        name: `${problem} Session`,
+        created_by_id: clerkId,
+        members: [clerkId],
+      });
+      await channel.create();
+    } catch (streamError) {
+      console.error("Error creating Stream channel:", streamError);
+      // Continue even if Stream channel creation fails
+    }
 
     return res.status(201).json({ session });
 
   } catch (error) {
     console.error("Error in createSession controller:", error);
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message || "Internal Server Error", error: error.toString() });
   }
 }
 
 
-export async function getActiveSessions(_, res) {
+export async function getActiveSessions(req, res) {
   try {
     const sessions = await Session.find({ status: "active" })
       .populate("host", "name profileImage email clerkId")
@@ -51,13 +56,17 @@ export async function getActiveSessions(_, res) {
 
     res.status(200).json({ sessions });
   } catch (error) {
-    console.log("Error in getActiveSessions controller:", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("Error in getActiveSessions controller:", error);
+    res.status(500).json({ message: error.message || "Internal Server Error", error: error.toString() });
   }
 }
 
 export async function getMyRecentSessions(req, res) {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized - user not found" });
+    }
+
     const userId = req.user._id;
 
     // get sessions where user is either host or participant
@@ -65,13 +74,15 @@ export async function getMyRecentSessions(req, res) {
       status: "completed",
       $or: [{ host: userId }, { participant: userId }],
     })
+      .populate("host", "name profileImage email clerkId")
+      .populate("participant", "name profileImage email clerkId")
       .sort({ createdAt: -1 })
       .limit(20);
 
     res.status(200).json({ sessions });
   } catch (error) {
-    console.log("Error in getMyRecentSessions controller:", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("Error in getMyRecentSessions controller:", error);
+    res.status(500).json({ message: error.message || "Internal Server Error", error: error.toString() });
   }
 }
 

@@ -51,6 +51,18 @@ app.get("/", (req, res) => {
 });
 
 
+// Middleware to ensure DB connection before handling requests (for Vercel serverless)
+app.use(async (req, res, next) => {
+  try {
+    // Ensure DB is connected before processing request
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error("Database connection error:", error);
+    res.status(500).json({ message: "Database connection failed", error: error.message });
+  }
+});
+
 // For Vercel serverless, export the app
 // For local development, start the server
 const startServer = async () => {
