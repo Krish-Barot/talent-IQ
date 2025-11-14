@@ -24,6 +24,7 @@ app.use(cors({
     const allowed = [
       process.env.CLIENT_URL,
       "https://talent-iq-frontend-eosin.vercel.app",
+      "https://talent-iq-beige.vercel.app",
     ];
 
     // allow ANY Vercel preview domain like https://projectname-git-branch-username.vercel.app
@@ -50,15 +51,22 @@ app.get("/", (req, res) => {
 });
 
 
+// For Vercel serverless, export the app
+// For local development, start the server
 const startServer = async () => {
   try {
     await connectDB();
-    app.listen(process.env.PORT, () => console.log("Server is running on port:", process.env.PORT));
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => console.log("Server is running on port:", PORT));
   } catch (error) {
     console.error("💥 Error starting the server", error);
   }
 };
 
+// Only start server if not in Vercel environment
+if (!process.env.VERCEL) {
+  startServer();
+}
 
-
-startServer();
+// Export app for Vercel serverless
+export default app;

@@ -24,7 +24,7 @@ function CreateSessionModal({
     <div className="modal modal-open">
       <div className="modal-box max-w-2xl">
         <h3 className="font-bold text-2xl mb-6">Create New Session</h3>
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form id="create-session-form" onSubmit={handleSubmit} className="space-y-8">
           {/* PROBLEM SELECTION */}
           <div className="space-y-2">
             <label className="label">
@@ -83,6 +83,7 @@ function CreateSessionModal({
           </button>
           <button
             type="submit"
+            form="create-session-form"
             className="btn btn-primary gap-2"
             disabled={isCreating || !roomConfig.problem}
           >

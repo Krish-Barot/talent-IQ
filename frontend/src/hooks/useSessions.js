@@ -78,19 +78,30 @@ export const useSessionById = (id) => {
 };
 
 export const useJoinSession = (id) => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["joinSession"],
     mutationFn: () => sessionApi.joinSession(id),
-    onSuccess: () => toast.success("Join session successfully !"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["session", id] });
+      queryClient.invalidateQueries({ queryKey: ["activeSessions"] });
+      toast.success("Join session successfully !");
+    },
     onError: (error) => toast.error(error.response?.data?.message || "Failed to join session !")
   })
 };
 
 export const useEndSession = (id) => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ["endSession"],
     mutationFn: () => sessionApi.endSession(id),
-    onSuccess: () => toast.success("Session ended successfully !"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["session", id] });
+      queryClient.invalidateQueries({ queryKey: ["activeSessions"] });
+      queryClient.invalidateQueries({ queryKey: ["myRecentSessions"] });
+      toast.success("Session ended successfully !");
+    },
     onError: (error) => toast.error(error.response?.data?.message || "Failed to end session !")
   })
 };
