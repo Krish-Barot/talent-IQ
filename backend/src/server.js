@@ -15,8 +15,16 @@ const app = express();
 
 // middleware
 app.use(express.json());
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+app.use(cors({
+  origin: process.env.CLIENT_URL,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(clerkMiddleware()); // This add auth field to request object : req.auth()
+
+// Handle preflight requests
+app.options('*', cors());
 
 // Inngest endpoint
 app.use("/api/inngest", serve({ client: inngest, functions }));
