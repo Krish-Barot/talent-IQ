@@ -1,24 +1,29 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { sessionApi } from "../api/session.js";
+import { useNavigate } from "react-router-dom";
 
-// In useSessions.js, update the useCreateSession hook
 export const useCreateSession = () => {
     const queryClient = useQueryClient();
+    const navigate = useNavigate();
 
-    const result = useMutation({
+    return useMutation({
         mutationKey: ["createSession"],
         mutationFn: sessionApi.createSession,
         retry: 0,
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ["activeSessions"] });
             queryClient.invalidateQueries({ queryKey: ["myRecentSessions"] });
-            toast.success("Session created Successfully !");
+            toast.success("Session created Successfully!");
+            if (data?.session?._id) {
+                navigate(`/sessions/${data.session._id}`);
+            }
         },
-        onError: (error) => toast.error(error.response?.data?.message || "Failed to create session !")
+        onError: (error) => {
+            console.error("Session creation error:", error);
+            toast.error(error.response?.data?.message || "Failed to create session!");
+        }
     });
-
-    return result;
 };
 
 export const useActiveSessions = () => {

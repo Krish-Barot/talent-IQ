@@ -22,25 +22,21 @@ function DashboardPage() {
   const { data: recentSessionsData, isLoading: loadingRecentSessions } = useMyRecentSessions();
 
   const handleCreateRoom = async (e) => {
-    e?.preventDefault(); // Prevent default form submission
-    e?.stopPropagation(); // Stop event bubbling
+    e?.preventDefault();
+    e?.stopPropagation();
 
-    if (createSessionMutation.isPending) return;
-
-    if (!roomConfig.problem || !roomConfig.difficulty) {
+    if (createSessionMutation.isPending || !roomConfig.problem || !roomConfig.difficulty) {
       return;
     }
 
     try {
-      const data = await createSessionMutation.mutateAsync({
+      await createSessionMutation.mutateAsync({
         problem: roomConfig.problem,
         difficulty: roomConfig.difficulty.toLowerCase()
       });
-
-      setShowCreatModal(false);
-      navigate(`/sessions/${data.session._id}`);
+      // Modal close is handled in the mutation's onSuccess
     } catch (error) {
-      console.log(error.message);
+      console.error("Error creating session:", error);
     }
   };
 
