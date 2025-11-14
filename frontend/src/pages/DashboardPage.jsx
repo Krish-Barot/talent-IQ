@@ -22,23 +22,25 @@ function DashboardPage() {
   const { data: recentSessionsData, isLoading: loadingRecentSessions } = useMyRecentSessions();
 
   const handleCreateRoom = () => {
-    if (!roomConfig.problem || !roomConfig.difficulty) {
-      return;
-    }
+  if (createSessionMutation.isPending) return;   
 
-    createSessionMutation.mutate(
-      {
-        problem: roomConfig.problem,
-        difficulty: roomConfig.difficulty.toLowerCase()
-      },
-      {
-        onSuccess: (data) => {
-          setShowCreatModal(false)
-          navigate(`/sessions/${data.session._id}`)
-        }
-      }
-    )
+  if (!roomConfig.problem || !roomConfig.difficulty) {
+    return;
   }
+
+  createSessionMutation.mutate(
+    {
+      problem: roomConfig.problem,
+      difficulty: roomConfig.difficulty.toLowerCase()
+    },
+    {
+      onSuccess: (data) => {
+        setShowCreatModal(false);
+        navigate(`/sessions/${data.session._id}`);
+      }
+    }
+  );
+};
 
   const activeSessions = activeSessoinsData?.sessions || [];
   const recentSessions = recentSessionsData?.sessions || [];
