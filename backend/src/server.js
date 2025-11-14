@@ -27,6 +27,9 @@ app.use("/api/sessions", sessionRoutes);
 app.get("/health", (req, res) => {
   res.status(200).json({ msg: "api is up and running" });
 });
+app.get("/", (req, res) => {
+  res.status(200).json({ message: "Backend is running 🎉" });
+});
 
 
 const startServer = async () => {
@@ -38,8 +41,6 @@ const startServer = async () => {
   }
 };
 
-app.get("/", (req, res) => {
-  res.status(200).json({ message: "Backend is running 🎉" });
-});
+
 
 startServer();

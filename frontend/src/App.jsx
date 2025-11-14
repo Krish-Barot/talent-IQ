@@ -8,6 +8,7 @@ import ProblemPage from './pages/ProblemPage';
 
 function App() {
   const { isSignedIn, isLoaded } = useUser();
+  console.log("Loaded API URL:", import.meta.env.VITE_API_URL);
 
   // To get rid of flickering section
   if(!isLoaded){
