@@ -3,6 +3,10 @@ import Session from "../models/Session.js";
 
 export async function createSession(req, res) {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized - user not found" });
+    }
+
     const { problem, difficulty } = req.body;
     const userId = req.user._id;
     const clerkId = req.user.clerkId;
@@ -11,21 +15,15 @@ export async function createSession(req, res) {
       return res.status(400).json({ message: "Problem and difficulty are required" });
     }
 
-    // generate a unique call id for stream video
     const callId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
-    // create session in db
-    const session = await Session.create({ problem, difficulty, host: userId, callId });
-
-    // create stream video call
-    await streamClient.video.call("default", callId).getOrCreate({
-      data: {
-        created_by_id: clerkId,
-        custom: { problem, difficulty, sessionId: session._id.toString() },
-      },
+    const session = await Session.create({
+      problem,
+      difficulty,
+      host: userId,
+      callId
     });
 
-    // chat messaging
     const channel = chatClient.channel("messaging", callId, {
       name: `${problem} Session`,
       created_by_id: clerkId,
@@ -34,12 +32,14 @@ export async function createSession(req, res) {
 
     await channel.create();
 
-    res.status(201).json({ session });
+    return res.status(201).json({ session });
+
   } catch (error) {
-    console.log("Error in createSession controller:", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("Error in createSession controller:", error);
+    return res.status(500).json({ message: error.message });
   }
 }
+
 
 export async function getActiveSessions(_, res) {
   try {
