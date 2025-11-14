@@ -12,9 +12,14 @@ export const useCreateSession = () => {
     mutationFn: sessionApi.createSession,
     retry: 0,
     onSuccess: (data) => {
+      // Invalidate queries to refetch the latest data
       queryClient.invalidateQueries({ queryKey: ["activeSessions"] });
       queryClient.invalidateQueries({ queryKey: ["myRecentSessions"] });
+      
+      // Show success message
       toast.success("Session created successfully!");
+      
+      // Navigate to the new session
       if (data?.session?._id) {
         navigate(`/session/${data.session._id}`);
       }
@@ -50,11 +55,14 @@ export const useMyRecentSessions = () => {
         return response;
       } catch (error) {
         console.error("Error fetching recent sessions:", error);
-        return { sessions: [] }; // Return empty array on error
+        // Return empty sessions array to prevent UI breakage
+        return { sessions: [], error: error.message };
       }
     },
     retry: 1,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
+    // Don't retry on 500 errors
+    retryIf: (error) => error?.response?.status !== 500
   });
 };
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useUser } from "@clerk/clerk-react";
+import { useNavigate } from "react-router-dom";
 import { useActiveSessions, useCreateSession, useMyRecentSessions } from "../hooks/useSessions";
 import Navbar from "../components/Navbar";
 import WelcomeSection from "../components/WelcomeSection";
@@ -10,6 +11,7 @@ import CreateSessionModal from "../components/CreateSessionModal";
 
 function DashboardPage() {
   const { user } = useUser();
+  const navigate = useNavigate();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [roomConfig, setRoomConfig] = useState({ problem: "", difficulty: "" });
 
@@ -29,17 +31,22 @@ function DashboardPage() {
     }
 
     try {
-      await createSessionMutation.mutateAsync({
+      const response = await createSessionMutation.mutateAsync({
         problem: roomConfig.problem,
         difficulty: roomConfig.difficulty.toLowerCase()
       });
+      
       // Reset form and close modal on success
       setRoomConfig({ problem: "", difficulty: "" });
       setShowCreateModal(false);
-      navigate(`/session/${data.session._id}`);
-
+      
+      // Navigate to the new session if we don't have automatic navigation from the hook
+      if (response?.session?._id) {
+        navigate(`/session/${response.session._id}`);
+      }
     } catch (error) {
       console.error("Create room error:", error);
+      // Error is already handled in the useCreateSession hook
     }
   };
 
