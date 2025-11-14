@@ -8,7 +8,7 @@ import {
   LoaderIcon,
 } from "lucide-react";
 import { Link } from "react-router";
-import { getDifficultyBadgeClass } from "../lib/utils";
+import { getdifficultyBadgeClass } from "../lib/utils";
 
 function ActiveSessions({ sessions, isLoading, isUserInSession }) {
   return (
@@ -54,7 +54,7 @@ function ActiveSessions({ sessions, isLoading, isUserInSession }) {
                       <div className="flex items-center gap-2 mb-2">
                         <h3 className="font-bold text-lg truncate">{session.problem}</h3>
                         <span
-                          className={`badge badge-sm ${getDifficultyBadgeClass(
+                          className={`badge badge-sm ${getdifficultyBadgeClass(
                             session.difficulty
                           )}`}
                         >
