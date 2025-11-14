@@ -21,21 +21,26 @@ function DashboardPage() {
   const { data: activeSessionsData, isLoading: loadingActiveSessions } = useActiveSessions();
   const { data: recentSessionsData, isLoading: loadingRecentSessions } = useMyRecentSessions();
 
-  const handleCreateRoom = () => {
-    if (!roomConfig.problem || !roomConfig.difficulty) return;
+  // In DashboardPage.jsx
+  const handleCreateRoom = async (e) => {
+    e?.preventDefault();
+    e?.stopPropagation();
 
-    createSessionMutation.mutate(
-      {
+    if (createSessionMutation.isPending) return;
+
+    if (!roomConfig.problem || !roomConfig.difficulty) {
+      return;
+    }
+
+    try {
+      await createSessionMutation.mutateAsync({
         problem: roomConfig.problem,
-        difficulty: roomConfig.difficulty.toLowerCase(),
-      },
-      {
-        onSuccess: (data) => {
-          setShowCreateModal(false);
-          navigate(`/session/${data.session._id}`);
-        },
-      }
-    );
+        difficulty: roomConfig.difficulty.toLowerCase()
+      });
+      // Don't navigate here, let the mutation handle it
+    } catch (error) {
+      console.error("Create room error:", error);
+    }
   };
 
   const activeSessions = activeSessionsData?.sessions || [];
