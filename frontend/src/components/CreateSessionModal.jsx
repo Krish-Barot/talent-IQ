@@ -1,4 +1,4 @@
-import { Code2Icon, LoaderIcon, PlusIcon } from "lucide-react";
+import { Code2Icon, Loader2, Plus } from "lucide-react";
 import { PROBLEMS } from "../data/problems";
 
 function CreateSessionModal({
@@ -13,12 +13,18 @@ function CreateSessionModal({
 
   if (!isOpen) return null;
 
+  if (!isOpen) return null;
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onCreateRoom(e);
+  };
+
   return (
     <div className="modal modal-open">
       <div className="modal-box max-w-2xl">
         <h3 className="font-bold text-2xl mb-6">Create New Session</h3>
-
-        <div className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-8">
           {/* PROBLEM SELECTION */}
           <div className="space-y-2">
             <label className="label">
@@ -64,25 +70,28 @@ function CreateSessionModal({
               </div>
             </div>
           )}
-        </div>
+        </form>
 
         <div className="modal-action">
-          <button className="btn btn-ghost" onClick={onClose}>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={onClose}
+            disabled={isCreating}
+          >
             Cancel
           </button>
-
           <button
+            type="submit"
             className="btn btn-primary gap-2"
-            onClick={onCreateRoom}
             disabled={isCreating || !roomConfig.problem}
           >
             {isCreating ? (
-              <LoaderIcon className="size-5 animate-spin" />
+              <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
-              <PlusIcon className="size-5" />
+              <Plus className="w-5 h-5" />
             )}
-
-            {isCreating ? "Creating..." : "Create"}
+            {isCreating ? 'Creating...' : 'Create'}
           </button>
         </div>
       </div>

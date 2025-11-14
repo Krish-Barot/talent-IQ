@@ -1,8 +1,6 @@
-import { useNavigate } from "react-router";
-import { useUser } from "@clerk/clerk-react";
 import { useState } from "react";
+import { useUser } from "@clerk/clerk-react";
 import { useActiveSessions, useCreateSession, useMyRecentSessions } from "../hooks/useSessions";
-
 import Navbar from "../components/Navbar";
 import WelcomeSection from "../components/WelcomeSection";
 import StatsCards from "../components/StatsCards";
@@ -11,13 +9,11 @@ import RecentSessions from "../components/RecentSessions";
 import CreateSessionModal from "../components/CreateSessionModal";
 
 function DashboardPage() {
-  const navigate = useNavigate();
   const { user } = useUser();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [roomConfig, setRoomConfig] = useState({ problem: "", difficulty: "" });
 
   const createSessionMutation = useCreateSession();
-
   const { data: activeSessionsData, isLoading: loadingActiveSessions } = useActiveSessions();
   const { data: recentSessionsData, isLoading: loadingRecentSessions } = useMyRecentSessions();
 
@@ -37,7 +33,11 @@ function DashboardPage() {
         problem: roomConfig.problem,
         difficulty: roomConfig.difficulty.toLowerCase()
       });
-      // Don't navigate here, let the mutation handle it
+      // Reset form and close modal on success
+      setRoomConfig({ problem: "", difficulty: "" });
+      setShowCreateModal(false);
+      navigate(`/session/${data.session._id}`);
+
     } catch (error) {
       console.error("Create room error:", error);
     }
