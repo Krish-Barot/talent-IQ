@@ -13,8 +13,13 @@ function CreateSessionModal({
 
   if (!isOpen) return null;
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onCreateRoom(e);
+  };
+
   return (
-    <div className="modal modal-open">
+    <form onSubmit={handleSubmit} className="modal modal-open">
       <div className="modal-box max-w-2xl">
         <h3 className="font-bold text-2xl mb-6">Create New Session</h3>
 
@@ -67,13 +72,13 @@ function CreateSessionModal({
         </div>
 
         <div className="modal-action">
-          <button className="btn btn-ghost" onClick={onClose}>
+          <button type="button" className="btn btn-ghost" onClick={onClose}>
             Cancel
           </button>
 
           <button
+            type="submit"
             className="btn btn-primary gap-2"
-            onClick={onCreateRoom}
             disabled={isCreating || !roomConfig.problem}
           >
             {isCreating ? (
@@ -87,7 +92,7 @@ function CreateSessionModal({
         </div>
       </div>
       <div className="modal-backdrop" onClick={onClose}></div>
-    </div>
+    </form>
   );
 }
 export default CreateSessionModal;

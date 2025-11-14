@@ -21,32 +21,33 @@ function DashboardPage() {
   const { data: activeSessoinsData, isLoading: loadingActiveSessions } = useActiveSessions();
   const { data: recentSessionsData, isLoading: loadingRecentSessions } = useMyRecentSessions();
 
-  const handleCreateRoom = () => {
-  if (createSessionMutation.isPending) return;   
+  const handleCreateRoom = async (e) => {
+    e?.preventDefault(); // Prevent default form submission
+    e?.stopPropagation(); // Stop event bubbling
 
-  if (!roomConfig.problem || !roomConfig.difficulty) {
-    return;
-  }
+    if (createSessionMutation.isPending) return;
 
-  createSessionMutation.mutate(
-    {
-      problem: roomConfig.problem,
-      difficulty: roomConfig.difficulty.toLowerCase()
-    },
-    {
-      onSuccess: (data) => {
-        setShowCreatModal(false);
-        navigate(`/sessions/${data.session._id}`);
-      }
+    if (!roomConfig.problem || !roomConfig.difficulty) {
+      return;
     }
-  );
-};
+
+    try {
+      const data = await createSessionMutation.mutateAsync({
+        problem: roomConfig.problem,
+        difficulty: roomConfig.difficulty.toLowerCase()
+      });
+
+      setShowCreatModal(false);
+      navigate(`/sessions/${data.session._id}`);
+    } catch (error) {
+    }
+  };
 
   const activeSessions = activeSessoinsData?.sessions || [];
   const recentSessions = recentSessionsData?.sessions || [];
 
   const isUserInSession = (session) => {
-    if(!user.id){
+    if (!user.id) {
       return false;
     }
 
