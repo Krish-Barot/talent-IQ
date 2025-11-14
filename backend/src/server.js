@@ -22,7 +22,7 @@ app.use(clerkMiddleware()); // This add auth field to request object : req.auth(
 app.use("/api/inngest", serve({ client: inngest, functions }));
 
 app.use("/api/chat",chatRoutes);
-app.use("/api/session", sessionRoutes);
+app.use("/api/sessions", sessionRoutes);
 
 // Default Route
 app.get("/", (req, res) => {
@@ -44,7 +44,7 @@ const startServer = async () => {
   try {
     await connectDB();
 
-    const port = process.env.PORT || 8080;
+    const port = process.env.PORT;
     if (process.env.NODE_ENV !== "production") {
       app.listen(port, () => console.log(`✅ Server running on port ${port}`));
     } else {
