@@ -1,6 +1,14 @@
-import { ArrowRightIcon, Code2Icon, CrownIcon, SparklesIcon, UsersIcon, ZapIcon, LoaderIcon } from "lucide-react";
+import {
+  ArrowRightIcon,
+  Code2Icon,
+  CrownIcon,
+  SparklesIcon,
+  UsersIcon,
+  ZapIcon,
+  LoaderIcon,
+} from "lucide-react";
 import { Link } from "react-router";
-import { getdifficultyBadgeClass } from "../lib/utils";
+import { getDifficultyBadgeClass } from "../lib/utils";
 
 function ActiveSessions({ sessions, isLoading, isUserInSession }) {
   return (
@@ -46,7 +54,7 @@ function ActiveSessions({ sessions, isLoading, isUserInSession }) {
                       <div className="flex items-center gap-2 mb-2">
                         <h3 className="font-bold text-lg truncate">{session.problem}</h3>
                         <span
-                          className={`badge badge-sm ${getdifficultyBadgeClass(
+                          className={`badge badge-sm ${getDifficultyBadgeClass(
                             session.difficulty
                           )}`}
                         >
