@@ -18,13 +18,24 @@ const app = express();
 // middleware
 app.use(express.json());
 app.use(cors({
-  origin: [
-    process.env.CLIENT_URL,
-    "https://talent-iq-frontend-eosin.vercel.app",
-    "https://talent-iq-frontend-loksvgvuu-krishjbarot-gmailcoms-projects.vercel.app"
-  ],
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+
+    const allowed = [
+      process.env.CLIENT_URL,
+      "https://talent-iq-frontend-eosin.vercel.app",
+    ];
+
+    // allow ANY Vercel preview domain like https://projectname-git-branch-username.vercel.app
+    if (allowed.includes(origin) || origin.endsWith(".vercel.app")) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("Not allowed by CORS"));
+  },
   credentials: true
 }));
+
 app.use(clerkMiddleware()); // this adds auth field to request object: req.auth()
 
 app.use("/api/inngest", serve({ client: inngest, functions }));
