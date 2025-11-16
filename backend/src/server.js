@@ -15,13 +15,25 @@ const app = express();
 // middleware
 app.use(express.json());
 // credentials:true meaning?? => server allows a browser to include cookies on request
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  process.env.CLIENT_URL_PREVIEW,
+];
+
 app.use(cors({
-  origin: [
-    "https://talent-iq-frontend-ocyon0oxr.vercel.app",
-    process.env.CLIENT_URL
-  ],
+  origin: (origin, callback) => {
+    // Allow no-origin requests (like Postman)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("Not allowed by CORS"));
+  },
   credentials: true
 }));
+
 app.use(clerkMiddleware()); // this adds auth field to request object: req.auth()
 
 app.use("/api/inngest", serve({ client: inngest, functions }));
