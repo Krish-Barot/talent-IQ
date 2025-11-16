@@ -21,49 +21,33 @@ function DashboardPage() {
   const { data: activeSessionsData, isLoading: loadingActiveSessions } = useActiveSessions();
   const { data: recentSessionsData, isLoading: loadingRecentSessions } = useMyRecentSessions();
 
-  // const handleCreateRoom = () => {
-  //   if (!roomConfig.problem || !roomConfig.difficulty) return;
-
-  //   createSessionMutation.mutate(
-  //     {
-  //       problem: roomConfig.problem,
-  //       difficulty: roomConfig.difficulty.toLowerCase(),
-  //     },
-  //     {
-  //       onSuccess: (data) => {
-  //         setShowCreateModal(false);
-  //         navigate(`/session/${data.session._id}`);
-  //       },
-  //     }
-  //   );
-  // };
   const handleCreateRoom = async () => {
     if (!roomConfig.problem || !roomConfig.difficulty) return;
-  
+
     try {
       const data = await createSessionMutation.mutateAsync({
         problem: roomConfig.problem,
         difficulty: roomConfig.difficulty.toLowerCase(),
       });
-  
-      // Handle both possible shapes:
+
+      console.log("Full response data:", data); // Debug log
+      
       const session = data?.session || data;
       const sessionId = session?._id || session?.id;
-  
+
       if (!sessionId) {
         console.error("Invalid session data received:", data);
+        console.error("Session object keys:", session ? Object.keys(session) : "session is null/undefined");
         return;
       }
-  
+
       setShowCreateModal(false);
       navigate(`/session/${sessionId}`);
-  
+
     } catch (error) {
       console.error("Failed to create session:", error);
     }
-};
-
-
+  };
 
   const activeSessions = activeSessionsData?.sessions || [];
   const recentSessions = recentSessionsData?.sessions || [];
