@@ -2,41 +2,20 @@ import express from "express";
 import cors from "cors";
 import { serve } from "inngest/express";
 import { clerkMiddleware } from "@clerk/express";
-import dotenv from "dotenv";
-
 import { connectDB } from "./lib/db.js";
 import { inngest, functions } from "./lib/inngest.js";
-
 import chatRoutes from "./routes/chatRoutes.js";
 import sessionRoutes from "./routes/sessionRoutes.js";
+import dotenv from "dotenv";
 
 dotenv.config();
 
 const app = express();
 
-
 // middleware
 app.use(express.json());
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-
-    const allowed = [
-      process.env.CLIENT_URL,
-      "https://talent-iq-frontend-eosin.vercel.app",
-      "https://talent-iq-beige.vercel.app",
-    ];
-
-    // allow ANY Vercel preview domain like https://projectname-git-branch-username.vercel.app
-    if (allowed.includes(origin) || origin.endsWith(".vercel.app")) {
-      return callback(null, true);
-    }
-
-    return callback(new Error("Not allowed by CORS"));
-  },
-  credentials: true
-}));
-
+// credentials:true meaning?? => server allows a browser to include cookies on request
+app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use(clerkMiddleware()); // this adds auth field to request object: req.auth()
 
 app.use("/api/inngest", serve({ client: inngest, functions }));
@@ -44,41 +23,21 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/sessions", sessionRoutes);
 
 app.get("/health", (req, res) => {
-  res.status(200).json({ msg: "api is up and running" });
+  res.status(200).json({ messaage: "api is up and running" });
 });
+
 app.get("/", (req, res) => {
-  res.status(200).json({ message: "Backend is running 🎉" });
-});
+  res.status(200).json({messaage: "Backend is UP !"});
+})
 
 
-// Middleware to ensure DB connection before handling requests (for Vercel serverless)
-app.use(async (req, res, next) => {
-  try {
-    // Ensure DB is connected before processing request
-    await connectDB();
-    next();
-  } catch (error) {
-    console.error("Database connection error:", error);
-    res.status(500).json({ message: "Database connection failed", error: error.message });
-  }
-});
-
-// For Vercel serverless, export the app
-// For local development, start the server
 const startServer = async () => {
   try {
     await connectDB();
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => console.log("Server is running on port:", PORT));
+    app.listen(process.env.PORT, () => console.log("Server is running on port:", process.env.PORT));
   } catch (error) {
     console.error("💥 Error starting the server", error);
   }
 };
 
-// Only start server if not in Vercel environment
-if (!process.env.VERCEL) {
-  startServer();
-}
-
-// Export app for Vercel serverless
-export default app;
+startServer();

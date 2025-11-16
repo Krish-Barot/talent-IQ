@@ -1,16 +1,8 @@
-import {
-  ArrowRightIcon,
-  Code2Icon,
-  CrownIcon,
-  SparklesIcon,
-  UsersIcon,
-  ZapIcon,
-  LoaderIcon,
-} from "lucide-react";
+import { ArrowRightIcon, Code2Icon, CrownIcon, SparklesIcon, UsersIcon, ZapIcon, LoaderIcon, } from "lucide-react";
 import { Link } from "react-router";
 import { getdifficultyBadgeClass } from "../lib/utils";
 
-function ActiveSessions({ sessions, isLoading, isUserInSession }) {
+export default function ActiveSessions({ sessions, isLoading, isUserInSession }) {
   return (
     <div className="lg:col-span-2 card bg-base-100 border-2 border-primary/20 hover:border-primary/30 h-full">
       <div className="card-body">
@@ -106,4 +98,3 @@ function ActiveSessions({ sessions, isLoading, isUserInSession }) {
     </div>
   );
 }
-export default ActiveSessions;

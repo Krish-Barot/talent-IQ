@@ -1,7 +1,7 @@
 import { useUser } from "@clerk/clerk-react";
 import { ArrowRightIcon, SparklesIcon, ZapIcon } from "lucide-react";
 
-function WelcomeSection({ onCreateSession }) {
+export default function WelcomeSection({ onCreateSession }) {
   const { user } = useUser();
 
   return (
@@ -37,4 +37,3 @@ function WelcomeSection({ onCreateSession }) {
   );
 }
 
-export default WelcomeSection;

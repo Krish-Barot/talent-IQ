@@ -1,30 +1,18 @@
-import { Code2Icon, Loader2, Plus } from "lucide-react";
+import { Code2Icon, PlusIcon } from "lucide-react";
 import { PROBLEMS } from "../data/problems";
+import { LoaderIcon } from "react-hot-toast";
 
-function CreateSessionModal({
-  isOpen,
-  onClose,
-  roomConfig,
-  setRoomConfig,
-  onCreateRoom,
-  isCreating,
-}) {
+export default function CreateSessionModal({ isOpen, onClose, roomConfig, setRoomConfig, onCreateRoom, isCreating, }) {
   const problems = Object.values(PROBLEMS);
 
   if (!isOpen) return null;
-
-  if (!isOpen) return null;
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onCreateRoom(e);
-  };
 
   return (
     <div className="modal modal-open">
       <div className="modal-box max-w-2xl">
         <h3 className="font-bold text-2xl mb-6">Create New Session</h3>
-        <form id="create-session-form" onSubmit={handleSubmit} className="space-y-8">
+
+        <div className="space-y-8">
           {/* PROBLEM SELECTION */}
           <div className="space-y-2">
             <label className="label">
@@ -70,29 +58,25 @@ function CreateSessionModal({
               </div>
             </div>
           )}
-        </form>
+        </div>
 
         <div className="modal-action">
-          <button
-            type="button"
-            className="btn btn-ghost"
-            onClick={onClose}
-            disabled={isCreating}
-          >
+          <button className="btn btn-ghost" onClick={onClose}>
             Cancel
           </button>
+
           <button
-            type="submit"
-            form="create-session-form"
             className="btn btn-primary gap-2"
+            onClick={onCreateRoom}
             disabled={isCreating || !roomConfig.problem}
           >
             {isCreating ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
+              <LoaderIcon className="size-5 animate-spin" />
             ) : (
-              <Plus className="w-5 h-5" />
+              <PlusIcon className="size-5" />
             )}
-            {isCreating ? 'Creating...' : 'Create'}
+
+            {isCreating ? "Creating..." : "Create"}
           </button>
         </div>
       </div>
@@ -100,4 +84,3 @@ function CreateSessionModal({
     </div>
   );
 }
-export default CreateSessionModal;

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useNavigate } from "react-router";
 import { useUser } from "@clerk/clerk-react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { useActiveSessions, useCreateSession, useMyRecentSessions } from "../hooks/useSessions";
+
 import Navbar from "../components/Navbar";
 import WelcomeSection from "../components/WelcomeSection";
 import StatsCards from "../components/StatsCards";
@@ -10,44 +11,31 @@ import RecentSessions from "../components/RecentSessions";
 import CreateSessionModal from "../components/CreateSessionModal";
 
 function DashboardPage() {
-  const { user } = useUser();
   const navigate = useNavigate();
+  const { user } = useUser();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [roomConfig, setRoomConfig] = useState({ problem: "", difficulty: "" });
 
   const createSessionMutation = useCreateSession();
+
   const { data: activeSessionsData, isLoading: loadingActiveSessions } = useActiveSessions();
   const { data: recentSessionsData, isLoading: loadingRecentSessions } = useMyRecentSessions();
 
-  // In DashboardPage.jsx
-  const handleCreateRoom = async (e) => {
-    e?.preventDefault();
-    e?.stopPropagation();
+  const handleCreateRoom = () => {
+    if (!roomConfig.problem || !roomConfig.difficulty) return;
 
-    if (createSessionMutation.isPending) return;
-
-    if (!roomConfig.problem || !roomConfig.difficulty) {
-      return;
-    }
-
-    try {
-      const response = await createSessionMutation.mutateAsync({
+    createSessionMutation.mutate(
+      {
         problem: roomConfig.problem,
-        difficulty: roomConfig.difficulty.toLowerCase()
-      });
-      
-      // Reset form and close modal on success
-      setRoomConfig({ problem: "", difficulty: "" });
-      setShowCreateModal(false);
-      
-      // Navigate to the new session if we don't have automatic navigation from the hook
-      if (response?.session?._id) {
-        navigate(`/session/${response.session._id}`);
+        difficulty: roomConfig.difficulty.toLowerCase(),
+      },
+      {
+        onSuccess: (data) => {
+          setShowCreateModal(false);
+          navigate(`/session/${data.session._id}`);
+        },
       }
-    } catch (error) {
-      console.error("Create room error:", error);
-      // Error is already handled in the useCreateSession hook
-    }
+    );
   };
 
   const activeSessions = activeSessionsData?.sessions || [];

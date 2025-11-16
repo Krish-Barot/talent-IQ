@@ -1,6 +1,5 @@
 import { UserButton } from '@clerk/clerk-react';
 import { BookOpenIcon, LayoutDashboardIcon, SparklesIcon } from 'lucide-react'
-import React from 'react'
 import { Link, useLocation } from 'react-router'
 
 export default function Navbar() {

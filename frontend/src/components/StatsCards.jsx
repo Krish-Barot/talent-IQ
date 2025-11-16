@@ -1,6 +1,6 @@
 import { TrophyIcon, UsersIcon } from "lucide-react";
 
-function StatsCards({ activeSessionsCount, recentSessionsCount }) {
+export default function StatsCards({ activeSessionsCount, recentSessionsCount }) {
   return (
     <div className="lg:col-span-1 grid grid-cols-1 gap-6">
       {/* Active Count */}
@@ -8,7 +8,7 @@ function StatsCards({ activeSessionsCount, recentSessionsCount }) {
         <div className="card-body">
           <div className="flex items-center justify-between mb-3">
             <div className="p-3 bg-primary/10 rounded-2xl">
-              <UsersIcon  className="w-7 h-7 text-primary" />
+              <UsersIcon className="w-7 h-7 text-primary" />
             </div>
             <div className="badge badge-primary">Live</div>
           </div>
@@ -33,4 +33,3 @@ function StatsCards({ activeSessionsCount, recentSessionsCount }) {
   );
 }
 
-export default StatsCards;

@@ -3,10 +3,6 @@ import Session from "../models/Session.js";
 
 export async function createSession(req, res) {
   try {
-    if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized - user not found" });
-    }
-
     const { problem, difficulty } = req.body;
     const userId = req.user._id;
     const clerkId = req.user.clerkId;
@@ -15,38 +11,37 @@ export async function createSession(req, res) {
       return res.status(400).json({ message: "Problem and difficulty are required" });
     }
 
+    // generate a unique call id for stream video
     const callId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
-    const session = await Session.create({
-      problem,
-      difficulty,
-      host: userId,
-      callId
+    // create session in db
+    const session = await Session.create({ problem, difficulty, host: userId, callId });
+
+    // create stream video call
+    await streamClient.video.call("default", callId).getOrCreate({
+      data: {
+        created_by_id: clerkId,
+        custom: { problem, difficulty, sessionId: session._id.toString() },
+      },
     });
 
-    // Create Stream channel (wrap in try-catch to not fail session creation if Stream fails)
-    try {
-      const channel = chatClient.channel("messaging", callId, {
-        name: `${problem} Session`,
-        created_by_id: clerkId,
-        members: [clerkId],
-      });
-      await channel.create();
-    } catch (streamError) {
-      console.error("Error creating Stream channel:", streamError);
-      // Continue even if Stream channel creation fails
-    }
+    // chat messaging
+    const channel = chatClient.channel("messaging", callId, {
+      name: `${problem} Session`,
+      created_by_id: clerkId,
+      members: [clerkId],
+    });
 
-    return res.status(201).json({ session });
+    await channel.create();
 
+    res.status(201).json({ session });
   } catch (error) {
-    console.error("Error in createSession controller:", error);
-    return res.status(500).json({ message: error.message || "Internal Server Error", error: error.toString() });
+    console.log("Error in createSession controller:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 }
 
-
-export async function getActiveSessions(req, res) {
+export async function getActiveSessions(_, res) {
   try {
     const sessions = await Session.find({ status: "active" })
       .populate("host", "name profileImage email clerkId")
@@ -56,17 +51,13 @@ export async function getActiveSessions(req, res) {
 
     res.status(200).json({ sessions });
   } catch (error) {
-    console.error("Error in getActiveSessions controller:", error);
-    res.status(500).json({ message: error.message || "Internal Server Error", error: error.toString() });
+    console.log("Error in getActiveSessions controller:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 }
 
 export async function getMyRecentSessions(req, res) {
   try {
-    if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized - user not found" });
-    }
-
     const userId = req.user._id;
 
     // get sessions where user is either host or participant
@@ -74,15 +65,13 @@ export async function getMyRecentSessions(req, res) {
       status: "completed",
       $or: [{ host: userId }, { participant: userId }],
     })
-      .populate("host", "name profileImage email clerkId")
-      .populate("participant", "name profileImage email clerkId")
       .sort({ createdAt: -1 })
       .limit(20);
 
     res.status(200).json({ sessions });
   } catch (error) {
-    console.error("Error in getMyRecentSessions controller:", error);
-    res.status(500).json({ message: error.message || "Internal Server Error", error: error.toString() });
+    console.log("Error in getMyRecentSessions controller:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 }
 
