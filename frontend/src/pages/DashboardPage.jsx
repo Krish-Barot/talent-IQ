@@ -38,21 +38,31 @@ function DashboardPage() {
   //   );
   // };
   const handleCreateRoom = async () => {
-  if (!roomConfig.problem || !roomConfig.difficulty) return;
-
-  try {
-    const data = await createSessionMutation.mutateAsync({
-      problem: roomConfig.problem,
-      difficulty: roomConfig.difficulty.toLowerCase(),
-    });
-
-    setShowCreateModal(false);
-
-    navigate(`/session/${data.session._id}`);
-  } catch (error) {
-    console.error("Failed to create session:", error);
-  }
+    if (!roomConfig.problem || !roomConfig.difficulty) return;
+  
+    try {
+      const data = await createSessionMutation.mutateAsync({
+        problem: roomConfig.problem,
+        difficulty: roomConfig.difficulty.toLowerCase(),
+      });
+  
+      // Handle both possible shapes:
+      const session = data?.session || data;
+      const sessionId = session?._id || session?.id;
+  
+      if (!sessionId) {
+        console.error("Invalid session data received:", data);
+        return;
+      }
+  
+      setShowCreateModal(false);
+      navigate(`/session/${sessionId}`);
+  
+    } catch (error) {
+      console.error("Failed to create session:", error);
+    }
 };
+
 
 
   const activeSessions = activeSessionsData?.sessions || [];
