@@ -1,7 +1,10 @@
-import { chatClient, streamClient } from "../lib/stream.js";
+import { chatClient, streamClient, upsertStreamUser } from "../lib/stream.js";
 import Session from "../models/Session.js";
 
 export async function createSession(req, res) {
+  let session = null;
+  let callId = null;
+  
   try {
     const { problem, difficulty } = req.body;
     const userId = req.user._id;
@@ -11,33 +14,87 @@ export async function createSession(req, res) {
       return res.status(400).json({ message: "Problem and difficulty are required" });
     }
 
+    // Ensure Stream user exists before creating session
+    try {
+      await upsertStreamUser({
+        id: clerkId.toString(),
+        name: req.user.name || "User",
+        image: req.user.profileImage || "",
+      });
+    } catch (upsertError) {
+      console.error("Error upserting Stream user:", upsertError.message);
+      // Continue anyway - user might already exist
+    }
+
     // generate a unique call id for stream video
-    const callId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    callId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
     // create session in db
-    const session = await Session.create({ problem, difficulty, host: userId, callId });
+    session = await Session.create({ problem, difficulty, host: userId, callId });
 
     // create stream video call
-    await streamClient.video.call("default", callId).getOrCreate({
-      data: {
-        created_by_id: clerkId,
-        custom: { problem, difficulty, sessionId: session._id.toString() },
-      },
-    });
+    try {
+      await streamClient.video.call("default", callId).getOrCreate({
+        data: {
+          created_by_id: clerkId,
+          custom: { problem, difficulty, sessionId: session._id.toString() },
+        },
+      });
+    } catch (streamError) {
+      console.error("Error creating Stream video call:", streamError.message);
+      // Clean up session if Stream call creation fails
+      await Session.findByIdAndDelete(session._id);
+      return res.status(500).json({ 
+        message: "Failed to create video call. Please try again." 
+      });
+    }
 
     // chat messaging
-    const channel = chatClient.channel("messaging", callId, {
-      name: `${problem} Session`,
-      created_by_id: clerkId,
-      members: [clerkId],
-    });
+    try {
+      const channel = chatClient.channel("messaging", callId, {
+        name: `${problem} Session`,
+        created_by_id: clerkId,
+        members: [clerkId],
+      });
 
-    await channel.create();
+      await channel.create();
+    } catch (chatError) {
+      console.error("Error creating Stream chat channel:", chatError.message);
+      // Clean up session and video call if chat creation fails
+      try {
+        const call = streamClient.video.call("default", callId);
+        await call.delete({ hard: true });
+      } catch (deleteError) {
+        console.error("Error deleting video call during cleanup:", deleteError.message);
+      }
+      await Session.findByIdAndDelete(session._id);
+      return res.status(500).json({ 
+        message: "Failed to create chat channel. Please try again." 
+      });
+    }
 
-    res.status(201).json({ session });
+    // Populate the session before sending response
+    const populatedSession = await Session.findById(session._id)
+      .populate("host", "name profileImage email clerkId");
+
+    res.status(201).json({ session: populatedSession });
   } catch (error) {
-    console.log("Error in createSession controller:", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("Error in createSession controller:", error.message);
+    console.error("Full error:", error);
+    
+    // Clean up session if it was created but something else failed
+    if (session && session._id) {
+      try {
+        await Session.findByIdAndDelete(session._id);
+      } catch (cleanupError) {
+        console.error("Error cleaning up session:", cleanupError.message);
+      }
+    }
+    
+    res.status(500).json({ 
+      message: error.message || "Internal Server Error",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined
+    });
   }
 }
 
