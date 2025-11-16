@@ -74,8 +74,36 @@ export async function createSession(req, res) {
     }
 
     // Populate the session before sending response
-    const populatedSession = await Session.findById(session._id)
-      .populate("host", "name profileImage email clerkId");
+    let populatedSession;
+    try {
+      populatedSession = await Session.findById(session._id)
+        .populate("host", "name profileImage email clerkId")
+        .lean(); // Convert to plain JavaScript object
+      
+      // Fallback to original session if population fails
+      if (!populatedSession) {
+        console.warn("Session population returned null, using original session");
+        populatedSession = session.toObject ? session.toObject() : session;
+      }
+    } catch (populateError) {
+      console.error("Error populating session:", populateError.message);
+      // Use original session as fallback
+      populatedSession = session.toObject ? session.toObject() : session;
+    }
+
+    // Ensure _id is present
+    if (!populatedSession || (!populatedSession._id && !populatedSession.id)) {
+      console.error("Session missing _id after population");
+      await Session.findByIdAndDelete(session._id);
+      return res.status(500).json({ 
+        message: "Failed to retrieve created session. Please try again." 
+      });
+    }
+
+    // Convert _id to string if it's an ObjectId
+    if (populatedSession._id && typeof populatedSession._id !== 'string') {
+      populatedSession._id = populatedSession._id.toString();
+    }
 
     res.status(201).json({ session: populatedSession });
   } catch (error) {

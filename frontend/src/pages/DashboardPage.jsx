@@ -32,13 +32,18 @@ function DashboardPage() {
       },
       {
         onSuccess: (data) => {
-          if (data && data.session && data.session._id) {
+          // Handle different possible response structures
+          const session = data?.session || data;
+          const sessionId = session?._id || session?.id;
+          
+          if (session && sessionId) {
             toast.success("Session created successfully!");
             setShowCreateModal(false);
             setRoomConfig({ problem: "", difficulty: "" }); // Reset form
-            navigate(`/session/${data.session._id}`);
+            navigate(`/session/${sessionId}`);
           } else {
-            toast.error("Invalid response from server");
+            console.error("Invalid session data received:", data);
+            toast.error("Invalid response from server. Please try again.");
           }
         },
         onError: (error) => {
