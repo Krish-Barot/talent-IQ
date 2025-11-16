@@ -21,22 +21,39 @@ function DashboardPage() {
   const { data: activeSessionsData, isLoading: loadingActiveSessions } = useActiveSessions();
   const { data: recentSessionsData, isLoading: loadingRecentSessions } = useMyRecentSessions();
 
-  const handleCreateRoom = () => {
-    if (!roomConfig.problem || !roomConfig.difficulty) return;
+  // const handleCreateRoom = () => {
+  //   if (!roomConfig.problem || !roomConfig.difficulty) return;
 
-    createSessionMutation.mutate(
-      {
-        problem: roomConfig.problem,
-        difficulty: roomConfig.difficulty.toLowerCase(),
-      },
-      {
-        onSuccess: (data) => {
-          setShowCreateModal(false);
-          navigate(`/session/${data.session._id}`);
-        },
-      }
-    );
-  };
+  //   createSessionMutation.mutate(
+  //     {
+  //       problem: roomConfig.problem,
+  //       difficulty: roomConfig.difficulty.toLowerCase(),
+  //     },
+  //     {
+  //       onSuccess: (data) => {
+  //         setShowCreateModal(false);
+  //         navigate(`/session/${data.session._id}`);
+  //       },
+  //     }
+  //   );
+  // };
+  const handleCreateRoom = async () => {
+  if (!roomConfig.problem || !roomConfig.difficulty) return;
+
+  try {
+    const data = await createSessionMutation.mutateAsync({
+      problem: roomConfig.problem,
+      difficulty: roomConfig.difficulty.toLowerCase(),
+    });
+
+    setShowCreateModal(false);
+
+    navigate(`/session/${data.session._id}`);
+  } catch (error) {
+    console.error("Failed to create session:", error);
+  }
+};
+
 
   const activeSessions = activeSessionsData?.sessions || [];
   const recentSessions = recentSessionsData?.sessions || [];
