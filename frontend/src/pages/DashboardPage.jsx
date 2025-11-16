@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router";
 import { useUser } from "@clerk/clerk-react";
 import { useState } from "react";
-import toast from "react-hot-toast";
 import { useActiveSessions, useCreateSession, useMyRecentSessions } from "../hooks/useSessions";
 
 import Navbar from "../components/Navbar";
@@ -32,23 +31,8 @@ function DashboardPage() {
       },
       {
         onSuccess: (data) => {
-          // Handle different possible response structures
-          const session = data?.session || data;
-          const sessionId = session?._id || session?.id;
-          
-          if (session && sessionId) {
-            toast.success("Session created successfully!");
-            setShowCreateModal(false);
-            setRoomConfig({ problem: "", difficulty: "" }); // Reset form
-            navigate(`/session/${sessionId}`);
-          } else {
-            console.error("Invalid session data received:", data);
-            toast.error("Invalid response from server. Please try again.");
-          }
-        },
-        onError: (error) => {
-          // Error toast is already handled in the hook
-          console.error("Failed to create session:", error);
+          setShowCreateModal(false);
+          navigate(`/session/${data.session._id}`);
         },
       }
     );

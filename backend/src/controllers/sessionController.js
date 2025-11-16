@@ -1,10 +1,7 @@
-import { chatClient, streamClient, upsertStreamUser } from "../lib/stream.js";
+import { chatClient, streamClient } from "../lib/stream.js";
 import Session from "../models/Session.js";
 
 export async function createSession(req, res) {
-  let session = null;
-  let callId = null;
-  
   try {
     const { problem, difficulty } = req.body;
     const userId = req.user._id;
@@ -14,115 +11,33 @@ export async function createSession(req, res) {
       return res.status(400).json({ message: "Problem and difficulty are required" });
     }
 
-    // Ensure Stream user exists before creating session
-    try {
-      await upsertStreamUser({
-        id: clerkId.toString(),
-        name: req.user.name || "User",
-        image: req.user.profileImage || "",
-      });
-    } catch (upsertError) {
-      console.error("Error upserting Stream user:", upsertError.message);
-      // Continue anyway - user might already exist
-    }
-
     // generate a unique call id for stream video
-    callId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    const callId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
     // create session in db
-    session = await Session.create({ problem, difficulty, host: userId, callId });
+    const session = await Session.create({ problem, difficulty, host: userId, callId });
 
     // create stream video call
-    try {
-      await streamClient.video.call("default", callId).getOrCreate({
-        data: {
-          created_by_id: clerkId,
-          custom: { problem, difficulty, sessionId: session._id.toString() },
-        },
-      });
-    } catch (streamError) {
-      console.error("Error creating Stream video call:", streamError.message);
-      // Clean up session if Stream call creation fails
-      await Session.findByIdAndDelete(session._id);
-      return res.status(500).json({ 
-        message: "Failed to create video call. Please try again." 
-      });
-    }
+    await streamClient.video.call("default", callId).getOrCreate({
+      data: {
+        created_by_id: clerkId,
+        custom: { problem, difficulty, sessionId: session._id.toString() },
+      },
+    });
 
     // chat messaging
-    try {
-      const channel = chatClient.channel("messaging", callId, {
-        name: `${problem} Session`,
-        created_by_id: clerkId,
-        members: [clerkId],
-      });
-
-      await channel.create();
-    } catch (chatError) {
-      console.error("Error creating Stream chat channel:", chatError.message);
-      // Clean up session and video call if chat creation fails
-      try {
-        const call = streamClient.video.call("default", callId);
-        await call.delete({ hard: true });
-      } catch (deleteError) {
-        console.error("Error deleting video call during cleanup:", deleteError.message);
-      }
-      await Session.findByIdAndDelete(session._id);
-      return res.status(500).json({ 
-        message: "Failed to create chat channel. Please try again." 
-      });
-    }
-
-    // Populate the session before sending response
-    let populatedSession;
-    try {
-      populatedSession = await Session.findById(session._id)
-        .populate("host", "name profileImage email clerkId")
-        .lean(); // Convert to plain JavaScript object
-      
-      // Fallback to original session if population fails
-      if (!populatedSession) {
-        console.warn("Session population returned null, using original session");
-        populatedSession = session.toObject ? session.toObject() : session;
-      }
-    } catch (populateError) {
-      console.error("Error populating session:", populateError.message);
-      // Use original session as fallback
-      populatedSession = session.toObject ? session.toObject() : session;
-    }
-
-    // Ensure _id is present
-    if (!populatedSession || (!populatedSession._id && !populatedSession.id)) {
-      console.error("Session missing _id after population");
-      await Session.findByIdAndDelete(session._id);
-      return res.status(500).json({ 
-        message: "Failed to retrieve created session. Please try again." 
-      });
-    }
-
-    // Convert _id to string if it's an ObjectId
-    if (populatedSession._id && typeof populatedSession._id !== 'string') {
-      populatedSession._id = populatedSession._id.toString();
-    }
-
-    res.status(201).json({ session: populatedSession });
-  } catch (error) {
-    console.error("Error in createSession controller:", error.message);
-    console.error("Full error:", error);
-    
-    // Clean up session if it was created but something else failed
-    if (session && session._id) {
-      try {
-        await Session.findByIdAndDelete(session._id);
-      } catch (cleanupError) {
-        console.error("Error cleaning up session:", cleanupError.message);
-      }
-    }
-    
-    res.status(500).json({ 
-      message: error.message || "Internal Server Error",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined
+    const channel = chatClient.channel("messaging", callId, {
+      name: `${problem} Session`,
+      created_by_id: clerkId,
+      members: [clerkId],
     });
+
+    await channel.create();
+
+    res.status(201).json({ session });
+  } catch (error) {
+    console.log("Error in createSession controller:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 }
 
