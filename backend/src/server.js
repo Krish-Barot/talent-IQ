@@ -14,8 +14,37 @@ const app = express();
 
 // middleware
 app.use(express.json());
-// credentials:true meaning?? => server allows a browser to include cookies on request
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+
+// Normalize CLIENT_URL to remove trailing slashes for CORS
+const normalizeOrigin = (origin) => {
+  if (!origin) return origin;
+  return origin.replace(/\/+$/, ''); // Remove trailing slashes
+};
+
+// Get normalized allowed origin
+const allowedOrigin = normalizeOrigin(process.env.CLIENT_URL);
+
+// CORS configuration - normalize origin to handle trailing slash issues
+app.use(cors({ 
+  origin: (origin, callback) => {
+    // If no origin (e.g., same-origin, Postman), allow it
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    const normalizedRequestOrigin = normalizeOrigin(origin);
+    
+    // Allow requests with matching origin (with or without trailing slash)
+    if (normalizedRequestOrigin === allowedOrigin) {
+      // Return the normalized allowed origin to set in header (without trailing slash)
+      callback(null, allowedOrigin);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true 
+}));
+
 app.use(clerkMiddleware()); // this adds auth field to request object: req.auth()
 
 app.use("/api/inngest", serve({ client: inngest, functions }));
